@@ -40,5 +40,5 @@ class Roster:
         Returns dataframe of per 36 minute statistic of NBA roster. Calculated by dividing stat by minutes played and then multiplying by 36.
         '''
         p36_df = self.df.copy()
-        p36_df.iloc[:, 4:] = round(p36_df.iloc[:, 4:].div(p36_df.mp, axis=0).mul(36, axis=0), ndigits=2)
+        p36_df.iloc[:, 5:] = round(p36_df.iloc[:, 5:].div(p36_df.mp, axis=0).mul(36, axis=0), ndigits=2)
         return p36_df
