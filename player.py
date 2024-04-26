@@ -37,9 +37,9 @@ class Player:
             rows.append(cur)
         df = pd.DataFrame(rows, columns=self.cols)
         df = df.astype(dtype = {'game_season': "object", 'date_game': "str", 'age': "str", 'team_id': "str", 'game_location': "str", 'opp_id': "str", 
-                               'game_result': "str", 'gs': "str", 'mp': "str", 'fg': "Int64", 'fga': "Int64", 'fg_pct': "float64", 'fg3': "Int64", 'fg3a': "Int64", 
-                               'fg3_pct': "float64", 'ft': "Int64", 'fta': "Int64", 'ft_pct': "float64", 'orb': "Int64", 'drb': "Int64", 'trb': "Int64", 'ast': "Int64", 'stl': "Int64",
-                               'blk': "Int64", 'tov': "Int64", 'pf': "Int64", 'pts': "Int64", 'game_score': "float64", 'plus_minus':"float64" })
+                               'game_result': "str", 'gs': "str", 'mp': "str", 'fg': "float", 'fga': "float", 'fg_pct': "float", 'fg3': "float", 'fg3a': "float", 
+                               'fg3_pct': "float", 'ft': "float", 'fta': "float", 'ft_pct': "float", 'orb': "float", 'drb': "float", 'trb': "float", 'ast': "float", 'stl': "float",
+                               'blk': "float", 'tov': "float", 'pf': "float", 'pts': "float", 'game_score': "float", 'plus_minus':"float" })
         return df
     
     def recent_games(self, n= 5, total=True, at=''):
