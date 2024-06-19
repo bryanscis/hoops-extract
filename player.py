@@ -2,16 +2,19 @@ from bs4 import BeautifulSoup, Comment
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import requests
+from validate import PlayerValidate
 
 class Player:
-    def __init__(self):
+    def __init__(self, first, last, season):
         self.cols = ['game_season', 'date_game', 'age', 'team_id','game_location', 'opp_id','game_result', 'gs', 'mp', 'fg', 'fga', 'fg_pct', 'fg3', 'fg3a', 'fg3_pct', 
                      'ft', 'fta', 'ft_pct', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'game_score', 'plus_minus' ]
+        self.first, self.last, self.season = first.lower(), last.lower(), season
         self.df, self.playoff_df = self.scrape_player()
 
     def scrape_player(self):
-        with open('curry2015.html') as f:
-            soup = BeautifulSoup(f, 'html.parser')
+        content = PlayerValidate().validate(self.first, self.last, self.season)
+        soup = BeautifulSoup(content,'html.parser')
         reg_season, playoff = soup.find('table', attrs={'id': 'pgl_basic'}), None
         # Find playoff table within commented JS
         for comment in soup.find_all(string=lambda string: isinstance(string, Comment)):
@@ -19,10 +22,16 @@ class Player:
                 playoff_soup = BeautifulSoup(comment, 'html.parser')
                 playoff = playoff_soup.find('table')
         regular_df = self.create_df(reg_season)
-        playoff_df = self.create_df(reg_season) if playoff else None
+        playoff_df = self.create_df(playoff) if playoff else None
         return regular_df, playoff_df
 
     def create_df(self, table):
+        '''
+        Creates dataframe for Player information given table and returns transformed Pandas dataframe.
+
+        Params:
+        - table (bs4 element): table provided to create dataframe
+        '''
         rows = []
         for row in table.tbody.find_all('tr'):
             columns = row.find_all('td')

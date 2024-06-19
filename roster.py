@@ -9,6 +9,12 @@ class Roster:
         self.df = self.scrape_roster()
 
     def scrape_roster(self):
+        '''
+        Creates dataframe for roster information given table and returns transformed Pandas dataframe.
+
+        Params:
+        - table (bs4 element): table provided to create dataframe
+        '''
         with open('gsw.html') as f:
             soup = BeautifulSoup(f, 'html.parser')
         table = soup.find('div', attrs={'id': 'div_totals'})

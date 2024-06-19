@@ -10,10 +10,16 @@ class Game:
     def scrape_game(self):
         with open('brk_gsw_2013.html') as f:
             soup = BeautifulSoup(f, 'html.parser')
-        home_table, away_table = soup.find('table', attrs={'id': 'box-BRK-game-basic'}), soup.find('table', attrs={'id': 'box-GSW-game-basic'})
+        away_table, home_table = soup.find('table', attrs={'id': 'box-BRK-game-basic'}), soup.find('table', attrs={'id': 'box-GSW-game-basic'})
         return self.create_df(home_table), self.create_df(away_table)
 
     def create_df(self, table):
+        '''
+        Creates dataframe for game information given table and returns transformed Pandas dataframe.
+
+        Params:
+        - table (bs4 element): table provided to create dataframe
+        '''
         rows = []
         for row in table.tbody.find_all('tr'):
             columns = row.find_all('td')
@@ -33,3 +39,16 @@ class Game:
         df = df.astype(dtype = {'player': "str", 'mp': "str", 'fg': "float", 'fga': "float", 'fg%': "float", '3p': "float", '3pa': "float", '3p%': "float", 
                                 'ft': "float", 'fta': "float", 'ft%': "float", 'orb': "float", 'drb': "float", 'trb': "float", 'ast': "float", 'stl': "float",
                                 'blk': "float", 'tov': "float", 'pf': "float", 'pts': "float", 'plus_minus':"float" })
+        return df
+    
+    def home_box(self):
+        '''
+        Returns box score of home team in form of Pandas dataframe.
+        '''
+        return self.home
+    
+    def away_box(self):
+        '''
+        Returns box score of away team in form of Pandas dataframe.
+        '''
+        return self.away
