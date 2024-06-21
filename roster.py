@@ -1,11 +1,13 @@
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
+from validate import RosterValidate
 
 class Roster:
 
-    def __init__(self):
+    def __init__(self, team, season):
         self.cols = ['player', 'age', 'g', 'gs', 'mp', 'fg', 'fga', 'fg%', '3p', '3pa', '3p%', '2p', '2pa', '2p%', 'efg%', 'ft', 'fta', 'ft%', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts']
+        self.team, self.season = team.upper(), season
         self.df = self.scrape_roster()
 
     def scrape_roster(self):
@@ -15,8 +17,8 @@ class Roster:
         Params:
         - table (bs4 element): table provided to create dataframe
         '''
-        with open('gsw.html') as f:
-            soup = BeautifulSoup(f, 'html.parser')
+        content = RosterValidate().validate(self.team, self.season)
+        soup = BeautifulSoup(content,'html.parser')
         table = soup.find('div', attrs={'id': 'div_totals'})
         rows = []
         for row in table.tbody.find_all('tr'):

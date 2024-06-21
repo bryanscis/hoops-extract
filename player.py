@@ -9,7 +9,7 @@ class Player:
     def __init__(self, first, last, season):
         self.cols = ['game_season', 'date_game', 'age', 'team_id','game_location', 'opp_id','game_result', 'gs', 'mp', 'fg', 'fga', 'fg_pct', 'fg3', 'fg3a', 'fg3_pct', 
                      'ft', 'fta', 'ft_pct', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'game_score', 'plus_minus' ]
-        self.first, self.last, self.season = first.lower(), last.lower(), season
+        self.first, self.last, self.season = first, last, season
         self.df, self.playoff_df = self.scrape_player()
 
     def scrape_player(self):
