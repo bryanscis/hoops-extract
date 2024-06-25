@@ -1,5 +1,6 @@
-from unidecode import unidecode
+import json
 import requests
+from unidecode import unidecode
 from datetime import datetime
 
 class ValidationError(Exception):
@@ -7,6 +8,26 @@ class ValidationError(Exception):
     pass
 
 class BaseValidate:
+    _teams = None
+
+    @staticmethod
+    def load_teams(file_path='teams.json'):
+        """
+        Loads team data from a JSON file into a class-level list.
+
+        Args:
+            file_path (str): Path to the JSON file containing teams data.
+
+        Raises:
+            ValidationError: If the teams data file cannot be loaded.
+        """
+        if not BaseValidate._teams:
+            try:
+                with open(file_path, 'r') as file:
+                    BaseValidate._teams = json.load(file)
+            except FileNotFoundError as e:
+                raise ValidationError(f'Error loading teams data: {e}')
+            
     def fetch_content(self, url):
         '''
         Returns content from given URL.
@@ -81,4 +102,34 @@ class RosterValidate(BaseValidate):
         if not content:
             raise ValidationError('No content can be fetched with the parameters.')
         
+        return content
+    
+class GameValidate(BaseValidate):
+
+    def validate(self, home_team, away_team, date):
+        '''
+        Checks to see if user input information is reachable for game.
+
+        Params:
+        - home_team   (string): home team's name which should be its abbreviation ie. GSW, SAC etc..
+        - away_team   (string): away team's name which should be its abbreviation ie. GSW, SAC etc..
+        - date        (string): date of match
+        '''
+        BaseValidate.load_teams()
+        formatted_date = None
+        try:
+            date_obj = datetime.strptime(date, "%a, %b %d, %Y")
+            formatted_date = date_obj.strftime("%Y%m%d")
+        except:
+            raise ValidationError('Date must follow format of "Weekday, Month Day, Year" ie. "Tue, Oct 24, 2023".')
+        if home_team.upper() not in self._teams.keys():
+            raise ValidationError(f"Home team {home_team} is not a valid NBA team abbreviation.")
+        if away_team.upper() not in self._teams.keys():
+            raise ValidationError(f"Away team {away_team} is not a valid NBA team abbreviation.")
+        
+        url = f'https://www.basketball-reference.com/boxscores/{formatted_date}0{home_team}.html'
+        content = self.fetch_content(url)
+        if not content:
+            raise ValidationError('No content can be fetched with the parameters.')
+
         return content

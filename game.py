@@ -1,16 +1,18 @@
-from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
+from bs4 import BeautifulSoup
+from validate import GameValidate
 
 class Game:
-    def __init__(self):
+    def __init__(self, home_team, away_team, date ,season):
         self.cols = ['player', 'mp', 'fg', 'fga', 'fg%', '3p', '3pa', '3p%', 'ft', 'fta', 'ft%', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'plus_minus']
-        self.home, self.away = self.scrape_game()
+        self.home_team, self.away_team, self.date , self.season = home_team, away_team, date, season
+        self.home_df, self.away_df = self.scrape_game(home_team, away_team, date)
 
-    def scrape_game(self):
-        with open('brk_gsw_2013.html') as f:
-            soup = BeautifulSoup(f, 'html.parser')
-        away_table, home_table = soup.find('table', attrs={'id': 'box-BRK-game-basic'}), soup.find('table', attrs={'id': 'box-GSW-game-basic'})
+    def scrape_game(self, home_team, away_team, date):
+        content = GameValidate().validate(self.home_team, self.away_team, self.date)
+        soup = BeautifulSoup(content, 'html.parser')
+        away_table, home_table = soup.find('table', attrs={'id': f'box-{self.away_team}-game-basic'}), soup.find('table', attrs={'id': f'box-{self.home_team}-game-basic'})
         return self.create_df(home_table), self.create_df(away_table)
 
     def create_df(self, table):
@@ -45,10 +47,10 @@ class Game:
         '''
         Returns box score of home team in form of Pandas dataframe.
         '''
-        return self.home
+        return self.home_df
     
     def away_box(self):
         '''
         Returns box score of away team in form of Pandas dataframe.
         '''
-        return self.away
+        return self.away_df
