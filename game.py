@@ -6,9 +6,9 @@ from validate import GameValidate
 class Game:
     stages = {'regular': 'regular', 'in-season': 'ist', 'play-in': 'play_in' ,'first round': 'first_round', 'semifinals': 'conf_semi', 'conference finals': 'conf_final', 'finals': 'final'}
 
-    def __init__(self, home_team, away_team, date ,season):
+    def __init__(self, home_team, away_team, date, start_time, season):
         self.cols = ['player', 'mp', 'fg', 'fga', 'fg%', '3p', '3pa', '3p%', 'ft', 'fta', 'ft%', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'plus_minus']
-        self.home_team, self.away_team, self.date , self.season = home_team, away_team, date, season
+        self.home_team, self.away_team, self.date, self.start_time, self.season = home_team, away_team, date, start_time, season
         self.attendance, self.home_score, self.away_score, self.game_time, self.stage= None, None, None, None, None
         self.home_df, self.away_df = self.scrape_game(home_team, away_team, date)
 
@@ -111,12 +111,12 @@ class Game:
         Returns dictionary of game statistics.
         '''
         statistics_keys = [
-            'home_team', 'away_team', 'date', 'season', 
+            'home_team', 'away_team', 'date', 'start_time', 'season', 
             'attendance', 'home_score', 'away_score', 
             'game_time', 'stage'
         ]
         statistics_values = [
-            self.home_team, self.away_team, self.date, self.season, 
+            self.home_team, self.away_team, self.date, self.start_time, self.season, 
             self.attendance, self.home_score, self.away_score, 
             self.game_time, self.stage
         ]
