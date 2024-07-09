@@ -1,6 +1,13 @@
 -- initialize.sql
 -- Script to create initial schema and tables
 
+-- Table: team
+CREATE TABLE IF NOT EXISTS team (
+    team_id SERIAL PRIMARY KEY,
+    team_name VARCHAR(50) UNIQUE NOT NULL,
+    abbreviation CHAR(3) UNIQUE NOT NULL
+);
+
 -- Table: player
 CREATE TABLE IF NOT EXISTS player (
     player_id SERIAL PRIMARY KEY,
@@ -10,24 +17,20 @@ CREATE TABLE IF NOT EXISTS player (
     UNIQUE (first_name, last_name)
 );
 
--- Table: team
-CREATE TABLE IF NOT EXISTS team (
-    team_id SERIAL PRIMARY KEY,
-    team_name VARCHAR(50) NOT NULL,
-    abbreviation CHAR(3) UNIQUE NOT NULL
-);
-
 -- Table: game
 CREATE TABLE IF NOT EXISTS game (
     game_id SERIAL PRIMARY KEY,
     home_team_id INT REFERENCES team(team_id),
     away_team_id INT REFERENCES team(team_id),
     game_date DATE,
+    start_time VARCHAR(10),
+    season_year INT,
     home_team_score INT,
     away_team_score INT,
     attendance INT,
-    game_time VARCHAR(5),
-    season_id INT REFERENCES season(season_id)
+    duration INTERVAL,
+    stage VARCHAR(20),
+    UNIQUE(game_id, home_team_id, away_team_id, game_date, start_time, season_year)
 );
 
 -- Table: player_stats
@@ -55,7 +58,7 @@ CREATE TABLE IF NOT EXISTS season (
 INSERT INTO team (team_name, abbreviation) VALUES
     ('Atlanta Hawks', 'ATL'),
     ('Boston Celtics', 'BOS'),
-    ('Charlotte Hornets', 'CHA'),
+    ('Charlotte Hornets', 'CHO'),
     ('Chicago Bulls', 'CHI'),
     ('Cleveland Cavaliers', 'CLE'),
     ('Dallas Mavericks', 'DAL'),
@@ -72,7 +75,7 @@ INSERT INTO team (team_name, abbreviation) VALUES
     ('Minnesota Timberwolves', 'MIN'),
     ('New Orleans Pelicans', 'NOP'),
     ('New York Knicks', 'NYK'),
-    ('Brooklyn Nets', 'BKN'),
+    ('Brooklyn Nets', 'BRK'),
     ('Oklahoma City Thunder', 'OKC'),
     ('Orlando Magic', 'ORL'),
     ('Philadelphia 76ers', 'PHI'),
@@ -81,5 +84,5 @@ INSERT INTO team (team_name, abbreviation) VALUES
     ('Sacramento Kings', 'SAC'),
     ('San Antonio Spurs', 'SAS'),
     ('Toronto Raptors', 'TOR'),
-    ('Utah Jazz', 'UTH'),
+    ('Utah Jazz', 'UTA'),
     ('Washington Wizards', 'WAS');

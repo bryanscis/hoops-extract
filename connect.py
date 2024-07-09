@@ -14,7 +14,6 @@ class DatabaseConnection:
         self.user = user or os.getenv('DB_USER')
         self.password = password or os.getenv('DB_PASSWORD')
         self.port = port or os.getenv('DB_PORT')
-        self.connection = self.create_connection()
 
     def create_connection(self):
         '''
@@ -33,11 +32,29 @@ class DatabaseConnection:
         except DatabaseException as error:
             raise DatabaseException(f'Error connecting to database: {error}.')
         
-    def close_connection(self):
+    def close_connection(self, connection):
         '''
         Close database connection.
         '''
-        if self.connection:
-            self.connection.close()
+        if connection:
+            connection.close()
         else:
             raise DatabaseException(f'Cannot close non-existing connection.')
+        
+    def execute_query(self, connection, query, params=None):
+        '''
+        Execute a SQL query.
+
+        Params:
+        - connection: existing database connection
+        - query (str): the SQL query to be executed
+        - params (tuple): the parameters to be passed to the SQL query
+        '''
+        if not connection:
+            raise DatabaseException(f'Connection error to database.')
+        try:
+            cursor = connection.cursor()
+            cursor.execute(query, params)
+            cursor.close()
+        except Exception as error:
+            raise DatabaseException(f'Error executing query: {error}')
