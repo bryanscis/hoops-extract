@@ -2,6 +2,7 @@ import json
 import requests
 from unidecode import unidecode
 from datetime import datetime
+from proxies import proxies
 
 class ValidationError(Exception):
     '''Custom exception class for validation errors.'''
@@ -37,7 +38,7 @@ class BaseValidate:
         '''
         try:
             headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"}
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, proxies=proxies)
             response.raise_for_status()
             return response.content
         except requests.RequestException as e:
