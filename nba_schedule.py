@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-import requests
 import csv
 from validate import BaseValidate, ValidationError
 from misc import get_team_abbreviation
@@ -55,7 +54,8 @@ def extract_roster_schedule(abb, season):
                     data[col['data-stat']] = get_team_abbreviation(col.get_text()) if col['data-stat'] == 'opp_name' else col.get_text()
             home_team, away_team = (data['opp_name'], abb.upper()) if data['game_location'] == '@' else (abb.upper(), data['opp_name'])
             home_team_score, away_team_score = (data['opp_pts'], data['pts']) if data['game_location'] == '@' else (data['pts'], data['opp_pts'])
-            writer.writerow([home_team, away_team, data['date_game'], data['game_start_time'], season, int(data['attendance'].replace(',', '')), home_team_score, away_team_score, data['game_duration']])
+            writer.writerow([home_team, away_team, data['date_game'], data['game_start_time'], season, 
+                             int(data.get('attendance', '0').replace(',', '')) if data.get('attendance') else 0, home_team_score, away_team_score, data['game_duration']])
 
     with open(f'./data/{season}/schedules/{abb}_all_games.csv', 'a', newline='') as f:
         writer = csv.writer(f, delimiter='\t')
@@ -67,5 +67,3 @@ def extract_roster_schedule(abb, season):
         playoff_table = soup.find('table', {'id': 'games_playoffs'})
         if playoff_table:
             analyze_table(playoff_table, writer)
-
-extract_roster_schedule('gsw', '2024')

@@ -6,16 +6,16 @@ from validate import BaseValidate, ValidationError
 def extract_all_players(season):
     validator = BaseValidate()
     validator.validate(season=season)
-    content = validator.fetch_content(f'https://basketball.realgm.com/nba/players/2024')
+    content = validator.fetch_content(f'https://basketball.realgm.com/nba/players/{season}')
     soup = BeautifulSoup(content, 'html.parser')
-    table_id = soup.findAll('table')
-    if len(table_id) != 1:
-        raise ValidationError(f'More than one table found. Error with {season} player data.')
-    table = soup.find('table', attrs={'id': table_id[0]})
-    with open(f'./data  /{season}_all_players.csv', 'a', newline="") as f:
+    table = soup.find('table', attrs={'class': 'tablesaw'})
+    with open(f'./data/{season}/{season}_all_players.csv', 'a', newline="") as f:
         writer = csv.writer(f, delimiter='\t')
         for row in table.tbody.find_all('tr'):
-                temp_row = []
-                for column in row.find_all('td'):
-                     temp_row.append(column.text)
-                writer.writerow(temp_row)
+            temp_row = []
+            for column in row.find_all('td'):
+                nationality = None
+                if column.get('data-th') == 'Nationality':
+                    nationality = column.find('a').get_text()
+                temp_row.append(column.text if not nationality else nationality )
+            writer.writerow(temp_row)
