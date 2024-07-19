@@ -1,7 +1,6 @@
-from validate import BaseValidate
 from bs4 import BeautifulSoup
 import csv
-from validate import BaseValidate, ValidationError
+from .validate import BaseValidate, ValidationError
 
 def extract_all_players(season):
     validator = BaseValidate()

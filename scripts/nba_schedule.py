@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import csv
-from validate import BaseValidate, ValidationError
+from .validate import BaseValidate, ValidationError
 from misc import get_team_abbreviation
 
 def extract_schedule(season):

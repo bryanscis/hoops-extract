@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
-from validate import RosterValidate
+from .validate import RosterValidate
 
 class Roster:
 

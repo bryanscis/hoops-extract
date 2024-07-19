@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
-from validate import GameValidate
+from .validate import GameValidate
 
 class Game:
     stages = {'regular': 'regular', 'in-season': 'ist', 'play-in': 'play_in' ,'first round': 'first_round', 'semifinals': 'conf_semi', 'conference finals': 'conf_final', 'finals': 'final'}
 
     def __init__(self, home_team, away_team, date, start_time, season):
-        self.cols = ['player', 'mp', 'fg', 'fga', 'fg%', '3p', '3pa', '3p%', 'ft', 'fta', 'ft%', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'plus_minus']
+        self.cols = ['player', 'mp', 'fg', 'fga', 'fg%', '3p', '3pa', '3p%', 'ft', 'fta', 'ft%', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'game_score', 'plus_minus']
         self.home_team, self.away_team, self.date, self.start_time, self.season = home_team, away_team, date, start_time, season
         self.attendance, self.home_score, self.away_score, self.game_time, self.stage= None, None, None, None, None
         self.home_df, self.away_df = self.scrape_game(home_team, away_team, date)
@@ -81,17 +81,20 @@ class Game:
             cur = [row.find('th').get_text()]
             for column in columns:
                 stat, value = column['data-stat'], column.get_text()
-                if stat in ['fg', 'fga', 'fg%', '3p', '3pa', 'ft', 'fta', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'plus_minus']:
-                    value = float(value) if value else np.nan
+                if stat in ['fg', 'fga', 'fg_pct', 'fg3', 'fg3a', 'fg3_pct' ,'ft', 'fta', 'ft_pct', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'game_score','plus_minus']:
+                    value = float(value) if value else 0
                 elif stat == 'mp' and value:
                     value = '00:' + value
+                elif stat == 'reason':
+                    cur.extend(['0'] * 21)
+                    continue
                 cur.append(value)
             rows.append(cur)
         df = pd.DataFrame(rows, columns=self.cols)
         df.replace(r'^\s*$', None, regex=True, inplace = True)
         df = df.astype(dtype = {'player': "str", 'mp': "str", 'fg': "float", 'fga': "float", 'fg%': "float", '3p': "float", '3pa': "float", '3p%': "float", 
                                 'ft': "float", 'fta': "float", 'ft%': "float", 'orb': "float", 'drb': "float", 'trb': "float", 'ast': "float", 'stl': "float",
-                                'blk': "float", 'tov': "float", 'pf': "float", 'pts': "float", 'plus_minus':"float" })
+                                'blk': "float", 'tov': "float", 'pf': "float", 'pts': "float", 'game_score': "float", 'plus_minus':"float" })
         return df
     
     def home_box(self):

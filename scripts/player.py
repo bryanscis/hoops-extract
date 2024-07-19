@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import requests
-from validate import PlayerValidate
+from .validate import PlayerValidate
 
 class Player:
     def __init__(self, first, last, season):

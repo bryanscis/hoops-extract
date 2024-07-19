@@ -2,7 +2,7 @@ import json
 import requests
 from unidecode import unidecode
 from datetime import datetime
-from proxies import proxies
+from .proxies import proxies
 
 class ValidationError(Exception):
     '''Custom exception class for validation errors.'''
