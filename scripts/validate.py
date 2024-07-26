@@ -75,7 +75,10 @@ class PlayerValidate(BaseValidate):
             raise ValidationError('First or last name cannot be empty.')
         
         url = f'https://www.basketball-reference.com/players/{last[0]}/{last[:5]}{first[:2]}01/gamelog/{season}'
-        content = self.fetch_content(url)
+        content = self.fetch_content(url).decode('utf-8')
+        if not (first.lower() in content.lower()) or not (last.lower() in content.lower()):
+            url = f'https://www.basketball-reference.com/players/{last[0]}/{last[:5]}{first[:2]}02/gamelog/{season}'
+            content = self.fetch_content(url)
         if not content:
             raise ValidationError('No content can be fetched with the parameters.')
         

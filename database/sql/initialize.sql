@@ -62,14 +62,25 @@ CREATE TABLE IF NOT EXISTS player_stats (
     player_stats_id SERIAL PRIMARY KEY,
     game_id INT REFERENCES game(game_id),
     player_id INT REFERENCES player(player_id),
-    minutes_played INT,
-    points INT,
-    assists INT,
-    rebounds INT,
-    steals INT,
-    blocks INT,
-    turnovers INT,
-    fouls INT
+    game_started BOOLEAN,
+    minutes_played VARCHAR(15),
+    fg_made INT,                   
+    fg_attempted INT,          
+    threes_made INT,           
+    threes_attempted INT,      
+    ft_made INT,               
+    ft_attempted INT,          
+    orb INT,                   
+    drb INT,                   
+    rebounds INT,              
+    assists INT,               
+    steals INT,                
+    blocks INT,                
+    turnovers INT,             
+    fouls INT,                 
+    points INT,                
+    plus_minus INT,             
+    inactive BOOLEAN DEFAULT FALSE
 );
 
 INSERT INTO team (team_name, abbreviation) VALUES
@@ -106,7 +117,3 @@ INSERT INTO team (team_name, abbreviation) VALUES
 
 INSERT INTO season (season_year)
 SELECT generate_series(1946, 2024) AS season_year;
-
-
-
--- \c bryansee; drop database nba; create database nba;
