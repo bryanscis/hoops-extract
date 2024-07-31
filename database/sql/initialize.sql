@@ -11,8 +11,7 @@ CREATE TABLE IF NOT EXISTS team (
 -- Table: season
 CREATE TABLE IF NOT EXISTS season (
     season_id SERIAL PRIMARY KEY,
-    season_year INT,
-    UNIQUE (season_year)
+    season_year INT UNIQUE NOT NULL CHECK (season_year > 1945)
 );
 
 -- Table: player
@@ -23,7 +22,7 @@ CREATE TABLE IF NOT EXISTS player(
     suffix VARCHAR(5) DEFAULT NULL,
     position VARCHAR(5),
     height VARCHAR(4),
-    weight INT,
+    weight INT CHECK (weight > 0),
     pre_draft_team VARCHAR(75),
     draft_pick VARCHAR(75),
     nationality VARCHAR(75),
@@ -33,10 +32,10 @@ CREATE TABLE IF NOT EXISTS player(
 -- Table: player_team_season
 CREATE TABLE IF NOT EXISTS player_team_season(
     player_team_season_id SERIAL PRIMARY KEY,
-    player_id INT REFERENCES player(player_id),
-    team_id INT REFERENCES team(team_id),
+    player_id INT REFERENCES player(player_id) ON DELETE CASCADE,
+    team_id INT REFERENCES team(team_id) ON DELETE CASCADE,
     age INT,
-    season_id INT REFERENCES season(season_id),
+    season_id INT REFERENCES season(season_id) ON DELETE CASCADE,
     current_team BOOLEAN NOT NULL DEFAULT TRUE,
     UNIQUE (player_id, season_id, team_id, current_team)
 );
@@ -44,11 +43,11 @@ CREATE TABLE IF NOT EXISTS player_team_season(
 -- Table: game
 CREATE TABLE IF NOT EXISTS game (
     game_id SERIAL PRIMARY KEY,
-    home_team_id INT REFERENCES team(team_id),
-    away_team_id INT REFERENCES team(team_id),
+    home_team_id INT REFERENCES team(team_id) ON DELETE CASCADE,
+    away_team_id INT REFERENCES team(team_id) ON DELETE CASCADE,
     game_date DATE,
     start_time VARCHAR(10),
-    season_year INT,
+    season_year INT REFERENCES season(season_year) ON DELETE CASCADE,
     home_team_score INT,
     away_team_score INT,
     attendance INT,
@@ -60,27 +59,28 @@ CREATE TABLE IF NOT EXISTS game (
 -- Table: player_stats
 CREATE TABLE IF NOT EXISTS player_stats (
     player_stats_id SERIAL PRIMARY KEY,
-    game_id INT REFERENCES game(game_id),
-    player_id INT REFERENCES player(player_id),
+    game_id INT REFERENCES game(game_id) ON DELETE CASCADE,
+    player_id INT REFERENCES player(player_id) ON DELETE CASCADE,
     game_started BOOLEAN,
     minutes_played VARCHAR(15),
-    fg_made INT,                   
-    fg_attempted INT,          
-    threes_made INT,           
-    threes_attempted INT,      
-    ft_made INT,               
-    ft_attempted INT,          
-    orb INT,                   
-    drb INT,                   
-    rebounds INT,              
-    assists INT,               
-    steals INT,                
-    blocks INT,                
-    turnovers INT,             
-    fouls INT,                 
-    points INT,                
+    fg_made INT CHECK (fg_made >= 0),                   
+    fg_attempted INT CHECK (fg_attempted >= 0),          
+    threes_made INT CHECK (threes_made >= 0),           
+    threes_attempted INT CHECK (threes_attempted >= 0),      
+    ft_made INT CHECK (ft_made >= 0),               
+    ft_attempted INT CHECK (ft_attempted >= 0),          
+    orb INT CHECK (orb >= 0),                   
+    drb INT CHECK (drb >= 0),                   
+    rebounds INT CHECK (rebounds >= 0),              
+    assists INT CHECK (assists >= 0),               
+    steals INT CHECK (steals >= 0),                
+    blocks INT CHECK (blocks >= 0),                
+    turnovers INT CHECK (turnovers >= 0),             
+    fouls INT CHECK (fouls >= 0),                 
+    points INT CHECK (points >= 0),                
     plus_minus INT,             
-    inactive BOOLEAN DEFAULT FALSE
+    inactive BOOLEAN DEFAULT FALSE,
+    UNIQUE (game_id, player_id)
 );
 
 INSERT INTO team (team_name, abbreviation) VALUES

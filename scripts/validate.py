@@ -3,6 +3,7 @@ import requests
 from unidecode import unidecode
 from datetime import datetime
 from .proxies import proxies
+import time
 
 class ValidationError(Exception):
     '''Custom exception class for validation errors.'''
@@ -10,9 +11,10 @@ class ValidationError(Exception):
 
 class BaseValidate:
     _teams = None
+    _players = None
 
     @staticmethod
-    def load_teams(file_path='teams.json'):
+    def load_teams(file_path='./data/teams.json'):
         """
         Loads team data from a JSON file into a class-level list.
 
@@ -28,6 +30,25 @@ class BaseValidate:
                     BaseValidate._teams = json.load(file)
             except FileNotFoundError as e:
                 raise ValidationError(f'Error loading teams data: {e}')
+
+    @staticmethod
+    def load_players(file_path='./data/all_players.json'):
+        """
+        Loads player data from a JSON file into a class-level list.
+
+        Args:
+            file_path (str): Path to the JSON file containing player name and its URL.
+
+        Raises:
+            ValidationError: If the teams data file cannot be loaded.
+        """
+        if not BaseValidate._players:
+            try:
+                with open(file_path, 'r') as file:
+                    players = json.load(file)
+                    BaseValidate._players = {player['Name']: player['URL'] for player in players}
+            except FileNotFoundError as e:
+                raise ValidationError(f'Error loading player data: {e}')
             
     def fetch_content(self, url):
         '''
@@ -68,17 +89,13 @@ class PlayerValidate(BaseValidate):
         - season (string): ending of NBA season
         '''
         super().validate(season=season)
-        first, last = unidecode(first).lower(), unidecode(last).lower()
         if not first.isalpha() and not last.isalpha():
             raise ValidationError('First or last name needs to be alphabetical.')
         if not first or not last:
             raise ValidationError('First or last name cannot be empty.')
-        
-        url = f'https://www.basketball-reference.com/players/{last[0]}/{last[:5]}{first[:2]}01/gamelog/{season}'
+
+        url = f'{BaseValidate._players[first + " " + last]}/gamelog/{season}'
         content = self.fetch_content(url).decode('utf-8')
-        if not (first.lower() in content.lower()) or not (last.lower() in content.lower()):
-            url = f'https://www.basketball-reference.com/players/{last[0]}/{last[:5]}{first[:2]}02/gamelog/{season}'
-            content = self.fetch_content(url)
         if not content:
             raise ValidationError('No content can be fetched with the parameters.')
         
