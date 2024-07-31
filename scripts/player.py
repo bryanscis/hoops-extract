@@ -6,10 +6,10 @@ import csv
 from .validate import PlayerValidate, ValidationError
 
 class Player:
-    def __init__(self, first, last, season):
+    def __init__(self, first, last, season, suffix=None):
         self.cols = ['game_season', 'date_game', 'age', 'team_id','game_location', 'opp_id','game_result', 'gs', 'mp', 'fg', 'fga', 'fg_pct', 'fg3', 'fg3a', 'fg3_pct', 
                      'ft', 'fta', 'ft_pct', 'orb', 'drb', 'trb', 'ast', 'stl', 'blk', 'tov', 'pf', 'pts', 'game_score', 'plus_minus' ]
-        self.first, self.last, self.season = first, last, season
+        self.first, self.last, self.suffix, self.season = first, last, suffix, season
         self.regular_table, self.playoff_table = self.scrape_player()
         self.df, self.playoff_df = self.create_df(self.regular_table), self.create_df(self.playoff_table)
 
@@ -17,7 +17,7 @@ class Player:
         '''
         Validates and returns both regular and playoff table.
         '''
-        content = PlayerValidate().validate(self.first, self.last, self.season)
+        content = PlayerValidate().validate(self.first, self.last, self.suffix, self.season)
         soup = BeautifulSoup(content,'html.parser')
         reg_season, playoff = soup.find('table', attrs={'id': 'pgl_basic'}), None
         # Find playoff table within commented JS
@@ -107,8 +107,11 @@ class Player:
         Params:
         - path (str): path for the file. If not provided, defaults to './data/{season}/players/{first}_{last}.csv'.
         '''
-        if path == '':
-            path = f'./data/{self.season}/players/{self.first.lower()}_{self.last.lower()}.csv'
+        if path == '' and self.suffix:
+            path = f'./data/{self.season}/players/{self.first.lower().replace(".", "")}_{self.last.lower().rstrip(".,")}_{self.suffix.lower().rstrip(".,")}.csv'
+        elif path == '':
+            path = f'./data/{self.season}/players/{self.first.lower().replace(".", "")}_{self.last.lower().rstrip(".,")}.csv'
+
         with open(path, 'a', newline="") as f:
             writer = csv.writer(f, delimiter='\t')
             for row in self.regular_table:

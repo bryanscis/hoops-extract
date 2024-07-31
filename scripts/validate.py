@@ -3,7 +3,7 @@ import requests
 from unidecode import unidecode
 from datetime import datetime
 from .proxies import proxies
-import time
+import re
 
 class ValidationError(Exception):
     '''Custom exception class for validation errors.'''
@@ -12,6 +12,7 @@ class ValidationError(Exception):
 class BaseValidate:
     _teams = None
     _players = None
+    _normalized_players = None
 
     @staticmethod
     def load_teams(file_path='./data/teams.json'):
@@ -40,13 +41,14 @@ class BaseValidate:
             file_path (str): Path to the JSON file containing player name and its URL.
 
         Raises:
-            ValidationError: If the teams data file cannot be loaded.
+            ValidationError: If the players data file cannot be loaded.
         """
         if not BaseValidate._players:
             try:
                 with open(file_path, 'r') as file:
                     players = json.load(file)
                     BaseValidate._players = {player['Name']: player['URL'] for player in players}
+                    BaseValidate._normalized_players = {re.sub(r'\W+', '', name).lower(): name for name in BaseValidate._players.keys()}
             except FileNotFoundError as e:
                 raise ValidationError(f'Error loading player data: {e}')
             
@@ -79,7 +81,7 @@ class BaseValidate:
 
 class PlayerValidate(BaseValidate):
 
-    def validate(self, first, last, season='2023'):
+    def validate(self, first, last, suffix=None, season='2023'):
         '''
         Checks to see if user input information is reachable for players.
 
@@ -93,8 +95,15 @@ class PlayerValidate(BaseValidate):
             raise ValidationError('First or last name needs to be alphabetical.')
         if not first or not last:
             raise ValidationError('First or last name cannot be empty.')
+        suffix = " " + suffix if suffix else ''
+        normalized_full_name = f'{first} {last}{suffix}'
+        matched_name = self._normalized_players.get(re.sub(r'\W+', '', normalized_full_name).lower(), None)
+        if not matched_name:
+            raise ValidationError('Player cannot be found. Please check player name.')
+        
+        player_url = self._players[matched_name]
 
-        url = f'{BaseValidate._players[first + " " + last]}/gamelog/{season}'
+        url = f'{player_url}/gamelog/{season}'
         content = self.fetch_content(url).decode('utf-8')
         if not content:
             raise ValidationError('No content can be fetched with the parameters.')
