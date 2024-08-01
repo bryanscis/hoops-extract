@@ -1,7 +1,9 @@
+apache-airflow==2.9.3
 beautifulsoup4==4.12.3
 bs4==0.0.2
 certifi==2024.6.2
 charset-normalizer==3.3.2
+docker==7.1.0
 idna==3.7
 lxml==5.2.1
 numpy==1.26.4
