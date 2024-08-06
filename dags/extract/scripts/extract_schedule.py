@@ -1,19 +1,7 @@
+from dags.utils import get_current_season
 from scripts.nba_schedule import extract_schedule as get_schedule
-from scripts.game import Game
-from scripts.misc import get_team_abbreviation
-import csv
-from datetime import datetime
 from pathlib import Path
 import logging
-
-def get_current_season():
-    '''
-    Gets current season as NBA season usually runs through October to April. Returns NBA year.
-    '''
-    now = datetime.now()
-    if now.month >= 10:
-        return now.year + 1
-    return now.year
 
 def extract_schedule():
     '''
