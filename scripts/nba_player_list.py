@@ -1,8 +1,14 @@
 from bs4 import BeautifulSoup
 import csv
-from .validate import BaseValidate, ValidationError
+from .validate import BaseValidate
 
-def extract_all_players(season):
+def extract_current_players(season):
+    '''
+    Extracts all player information from given season. Outputs CSV file to './data/{season}/{season}_all_players.csv'.
+
+    Params:
+    - season (string): Ending of NBA season.
+    '''
     validator = BaseValidate()
     validator.validate(season=season)
     content = validator.fetch_content(f'https://basketball.realgm.com/nba/players/{season}')

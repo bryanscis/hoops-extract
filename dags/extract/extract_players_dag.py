@@ -3,8 +3,9 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
 import sys
-from extract.scripts.extract_players import extract_players
-from dags.utils import log_task_start, log_task_end
+from extract.scripts.extract_players import extract_all_players
+from dags.utils import log_task_start, log_task_end, get_current_season
+from scripts.nba_player_list import extract_current_players
 
 sys.path.append('/opt/airflow')
 
@@ -19,9 +20,9 @@ default_args = {
 }
 
 with DAG(
-    'exrtract_players_dag',
+    'extract_players_dag',
     default_args=default_args,
-    description='Extract NBA players and their respective URLs',
+    description='Extract NBA players',
     schedule_interval='@monthly',
     catchup=False,
 ) as dag:
@@ -31,9 +32,14 @@ with DAG(
         python_callable=log_task_start,
         op_args=['extract_schedule_dag']
     )
-    extract_players_task = PythonOperator(
-        task_id='extract_players',
-        python_callable=extract_players,
+    extract_all_players_task = PythonOperator(
+        task_id='extract_all_players',
+        python_callable=extract_all_players,
+    )
+    extract_current_players_task = PythonOperator(
+        task_id='extract_current_players',
+        python_callable=extract_current_players,
+        op_args=[str(get_current_season())]
     )
     end_log = PythonOperator(
         task_id='end_log',
@@ -41,4 +47,4 @@ with DAG(
         op_args=['extract_schedule_dag']
     )
 
-    start_log >> extract_players_task >> end_log
+    start_log >> extract_all_players_task >> extract_current_players_task >> end_log
