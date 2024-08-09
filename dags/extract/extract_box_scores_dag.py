@@ -1,11 +1,11 @@
+import sys
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-from airflow.datasets import Dataset
 from datetime import timedelta
-import sys
-from extract.scripts.extract_schedule import extract_schedule
+from airflow.datasets import Dataset
 from dags.utils import log_task_start, log_task_end, get_current_season
+from extract.scripts.extract_box_scores import extract_box_scores
 
 sys.path.append('/opt/airflow')
 schedule_dataset = Dataset(f"/opt/airflow/data/{get_current_season}/schedules/nba_{get_current_season}_schedule.csv")
@@ -21,27 +21,29 @@ default_args = {
 }
 
 with DAG(
-    'extract_schedule_dag',
+    'extract_box_scores_dag',
     default_args=default_args,
-    description='Extract NBA schedule annually',
-    schedule_interval='@yearly',
+    description='Extract NBA box scores',
+    schedule_interval='@daily',
     catchup=False,
 ) as dag:
     
     start_log = PythonOperator(
         task_id='start_log',
         python_callable=log_task_start,
-        op_args=['extract_schedule_dag']
+        op_args=['extract_box_scores_dag']
     )
-    extract_schedule_task = PythonOperator(
-        task_id='extract_schedule',
-        python_callable=extract_schedule,
-        outlets=[schedule_dataset]
+    
+    extract_box_scores_task = PythonOperator(
+        task_id='check_and_extract_box_scores',
+        python_callable=extract_box_scores,
+        inlets=[schedule_dataset]
     )
+    
     end_log = PythonOperator(
         task_id='end_log',
         python_callable=log_task_end,
-        op_args=['extract_schedule_dag']
+        op_args=['extract_box_scores_dag']
     )
 
-    start_log >> extract_schedule_task >> end_log
+    start_log >> extract_box_scores_task >> end_log
