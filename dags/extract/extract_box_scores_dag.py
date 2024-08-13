@@ -3,12 +3,11 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
-from airflow.datasets import Dataset
-from dags.utils import log_task_start, log_task_end, get_current_season
+from dags.utils import log_task_start, log_task_end
 from extract.scripts.extract_box_scores import extract_box_scores
+from dataset import schedule_dataset, box_scores_dataset, statistics_dataset
 
 sys.path.append('/opt/airflow')
-schedule_dataset = Dataset(f"/opt/airflow/data/{get_current_season}/schedules/nba_{get_current_season}_schedule.csv")
 
 default_args = {
     'owner': 'airflow',
@@ -37,7 +36,8 @@ with DAG(
     extract_box_scores_task = PythonOperator(
         task_id='check_and_extract_box_scores',
         python_callable=extract_box_scores,
-        inlets=[schedule_dataset]
+        inlets=[schedule_dataset],
+        outlets=[box_scores_dataset, statistics_dataset]
     )
     
     end_log = PythonOperator(

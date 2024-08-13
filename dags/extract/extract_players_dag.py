@@ -6,6 +6,7 @@ import sys
 from extract.scripts.extract_players import extract_all_players
 from dags.utils import log_task_start, log_task_end, get_current_season
 from scripts.nba_player_list import extract_current_players
+from dataset import all_players_dataset, current_players_dataset
 
 sys.path.append('/opt/airflow')
 
@@ -35,11 +36,13 @@ with DAG(
     extract_all_players_task = PythonOperator(
         task_id='extract_all_players',
         python_callable=extract_all_players,
+        outlets=[all_players_dataset]
     )
     extract_current_players_task = PythonOperator(
         task_id='extract_current_players',
         python_callable=extract_current_players,
-        op_args=[str(get_current_season())]
+        op_args=[str(get_current_season())],
+        outlets=[current_players_dataset]
     )
     end_log = PythonOperator(
         task_id='end_log',

@@ -5,10 +5,10 @@ from airflow.datasets import Dataset
 from datetime import timedelta
 import sys
 from extract.scripts.extract_schedule import extract_schedule
-from dags.utils import log_task_start, log_task_end, get_current_season
+from dags.utils import log_task_start, log_task_end
+from dataset import schedule_dataset
 
 sys.path.append('/opt/airflow')
-schedule_dataset = Dataset(f"/opt/airflow/data/{get_current_season}/schedules/nba_{get_current_season}_schedule.csv")
 
 default_args = {
     'owner': 'airflow',
