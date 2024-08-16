@@ -2,6 +2,8 @@ import logging
 import csv
 import re
 import Levenshtein
+import json
+import heapq
 from scripts.validate import BaseValidate
 from utils import get_current_season
 
@@ -14,37 +16,41 @@ def find_closest_name(name_to_match):
 
     for name in normalized_names:
         distance = Levenshtein.distance(name, name_to_match)
-        distances.append((name, distance))
-    
-    distances.sort(key=lambda x: x[1])
+        if len(distances) < 5:
+            heapq.heappush(distances, (-distance, name))
+        else:
+            heapq.heappushpop(distances, (-distance, name))
 
-    return distances[:5]
+    closest_matches = sorted([(-dist, name) for dist, name in distances], key=lambda x: x[0])
+    for name in closest_matches[:5]:
+        logging.info(f'Close match for {name_to_match}: {name[1]} with distance {name[0]}.')
+
+    return closest_matches
 
 def transform_players():
     '''
-    Transforms current players to a specific format.
+    Transforms current players to specific format.
     '''
     year = get_current_season()
     current_players_file_path = f'./data/{year}/{year}_all_players.csv'
-    
-    try:
-        BaseValidate.load_players()
-    except Exception as e:
-        logging.error(f'Error loading players: {e}')
-        return
+    cleaned_names_file_path = f'./data/{year}/cleaned_{year}_matched_players.json'
+    unmatched_players = {}
 
-    try:
-        with open(current_players_file_path, mode='r') as f:
-            reader = csv.reader(f, delimiter='\t')
-            for row in reader:
-                player_name = re.sub(r'\W+', '', "".join(row[0])).lower()
-                if player_name not in BaseValidate._normalized_players:
-                    logging.info(f'{player_name} {row} not found. Using Levenshtein to match.')
-                    closest_matches = find_closest_name(player_name)
-                    for closest_name, distance in closest_matches:
-                        logging.info(f'Closest match for {player_name}: {closest_name} with distance {distance}')
-    except FileNotFoundError:
-        logging.error(f'File {current_players_file_path} not found.')
-    except Exception as e:
-        logging.error(f'An error occurred during player transformation: {e}')
+    BaseValidate.load_players()
 
+    with open(current_players_file_path, mode='r') as f:
+        reader = csv.reader(f, delimiter='\t')
+        for row in reader:
+            player_name = re.sub(r'\W+', '', "".join(row[0])).lower()
+            if player_name not in BaseValidate._normalized_players:
+                logging.info(f'{player_name} not found. Using Levenshtein to match.')
+                closest_matches = find_closest_name(player_name)
+                best_match = closest_matches[0][1]
+                logging.info(f'Closest match for {player_name}: {best_match} with distance {closest_matches[0][0]}.')
+                
+                unmatched_players[player_name] = best_match
+
+    with open(cleaned_names_file_path, mode='w') as json_file:
+        json.dump(unmatched_players, json_file, indent=4)
+
+    logging.info(f'Unmatched players written to {cleaned_names_file_path}. Double check file to ensure proper names.')
