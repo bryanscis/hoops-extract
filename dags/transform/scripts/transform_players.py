@@ -34,6 +34,11 @@ def transform_players():
     year = get_current_season()
     current_players_file_path = f'./data/{year}/{year}_all_players.csv'
     cleaned_names_file_path = f'./data/{year}/cleaned_{year}_matched_players.json'
+    try:
+        with open(cleaned_names_file_path, mode='r') as json_file:
+            matched_players = json.load(json_file)
+    except FileNotFoundError:
+        matched_players = {}
     unmatched_players = {}
 
     BaseValidate.load_players()
@@ -42,6 +47,9 @@ def transform_players():
         reader = csv.reader(f, delimiter='\t')
         for row in reader:
             player_name = re.sub(r'\W+', '', "".join(row[0])).lower()
+            if player_name in matched_players:
+                logging.info(f'{player_name} already matched as {matched_players[player_name]}. Skipping.')
+                continue
             if player_name not in BaseValidate._normalized_players:
                 logging.info(f'{player_name} not found. Using Levenshtein to match.')
                 closest_matches = find_closest_name(player_name)
@@ -50,7 +58,10 @@ def transform_players():
                 
                 unmatched_players[player_name] = best_match
 
-    with open(cleaned_names_file_path, mode='w') as json_file:
-        json.dump(unmatched_players, json_file, indent=4)
-
-    logging.info(f'Unmatched players written to {cleaned_names_file_path}. Double check file to ensure proper names.')
+    if unmatched_players:
+        matched_players.update(unmatched_players)
+        with open(cleaned_names_file_path, mode='w') as json_file:
+            json.dump(matched_players, json_file, indent=4)
+        logging.info(f'Unmatched players written/updated to {cleaned_names_file_path}. Double check file to ensure proper names.')
+    else:
+        logging.info(f'No new unmatched players found. {cleaned_names_file_path} remains unchanged.')
