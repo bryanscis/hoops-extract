@@ -65,3 +65,34 @@ def transform_players():
         logging.info(f'Unmatched players written/updated to {cleaned_names_file_path}. Double check file to ensure proper names.')
     else:
         logging.info(f'No new unmatched players found. {cleaned_names_file_path} remains unchanged.')
+
+def update_current_players_file():
+    '''
+    Updates the original player file with cleaned player names after transformations.
+    '''
+    year = get_current_season()
+    current_players_file_path = f'./data/{year}/{year}_all_players.csv'
+    cleaned_names_file_path = f'./data/{year}/cleaned_{year}_matched_players.json'
+    try:
+        with open(cleaned_names_file_path, mode='r') as json_file:
+            cleaned_players = json.load(json_file)
+    except FileNotFoundError:
+        logging.warning(f"{cleaned_names_file_path} not found. Exiting.")
+        return
+    BaseValidate.load_players()
+    updated_rows = []
+    with open(current_players_file_path, mode='r') as player_file:
+        reader = csv.reader(player_file, delimiter='\t')
+        for row in reader:
+            player_name = re.sub(r'\W+', '', "".join(row[0])).lower()
+            if player_name in cleaned_players:
+                updated_name = BaseValidate._normalized_players[cleaned_players[player_name]]
+                row[0] = updated_name
+                logging.info(f"Updated player name: {player_name} -> {updated_name}")
+            else:
+                row[0] =  BaseValidate._normalized_players[player_name]
+            updated_rows.append(row)
+    with open(current_players_file_path, mode='w', newline='') as player_file:
+        writer = csv.writer(player_file, delimiter='\t')
+        writer.writerows(updated_rows)
+    logging.info(f"Player file updated successfully. Output written to {current_players_file_path}.")

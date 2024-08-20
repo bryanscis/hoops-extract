@@ -5,7 +5,7 @@ from datetime import timedelta
 import sys
 from dags.utils import log_task_start, log_task_end
 from dataset import all_players_dataset, current_players_dataset
-from transform.scripts.transform_players import transform_players
+from transform.scripts.transform_players import transform_players, update_current_players_file
 
 sys.path.append('/opt/airflow')
 
@@ -37,10 +37,14 @@ with DAG(
         python_callable= transform_players,
         inlets=[current_players_dataset, all_players_dataset]
     )
+    update_current_players_file_task = PythonOperator(
+        task_id='updated_current_players_file',
+        python_callable=update_current_players_file
+    )
     end_log = PythonOperator(
         task_id='end_log',
         python_callable=log_task_end,
         op_args=['extract_schedule_dag']
     )
 
-    start_log >> transform_current_players_task >> end_log
+    start_log >> transform_current_players_task >> update_current_players_file_task >> end_log
