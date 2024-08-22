@@ -27,7 +27,7 @@ def find_closest_name(name_to_match):
 
     return closest_matches
 
-def transform_players():
+def transform_players(**kwargs):
     '''
     Transforms current players to specific format.
     '''
@@ -38,6 +38,7 @@ def transform_players():
         with open(cleaned_names_file_path, mode='r') as json_file:
             matched_players = json.load(json_file)
     except FileNotFoundError:
+        logging.info(f'{cleaned_names_file_path} not found.')
         matched_players = {}
     unmatched_players = {}
 
@@ -63,8 +64,10 @@ def transform_players():
         with open(cleaned_names_file_path, mode='w') as json_file:
             json.dump(matched_players, json_file, indent=4)
         logging.info(f'Unmatched players written/updated to {cleaned_names_file_path}. Double check file to ensure proper names.')
+        kwargs['ti'].xcom_push(key='unmatched_players', value=unmatched_players)
     else:
         logging.info(f'No new unmatched players found. {cleaned_names_file_path} remains unchanged.')
+        kwargs['ti'].xcom_push(key='unmatched_players', value=unmatched_players)
 
 def update_current_players_file():
     '''
@@ -96,3 +99,23 @@ def update_current_players_file():
         writer = csv.writer(player_file, delimiter='\t')
         writer.writerows(updated_rows)
     logging.info(f"Player file updated successfully. Output written to {current_players_file_path}.")
+
+def check_player_changes(**kwargs):
+    '''
+    Decides branch 'wait_for_verification' if cleaned_players has been updated or proceed to 'end_log' instead.
+
+    Returns:
+    - 'wait_for_verification': if there cleaned_players has been updated
+    - 'end_log'              : if there is no update of cleaned_players
+
+    '''
+    unmatched_players = kwargs['ti'].xcom_pull(task_ids='transform_current_players', key='unmatched_players')
+    if unmatched_players:
+        logging.info("New players have been added. Please verify the new player names in the cleaned_names_file_path before proceeding.")
+        return 'wait_for_verification'
+    else:
+        logging.info("No new players added. Proceeding to end_log.")
+        return 'end_log'
+
+def complete_verification():
+    logging.info("Verification has been completed manually.")
