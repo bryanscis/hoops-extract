@@ -1,63 +1,93 @@
 version: '3.7'
 
 services:
+  airflow_db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=${AIRFLOW_DB_USER}
+      - POSTGRES_PASSWORD=${AIRFLOW_DB_PASSWORD}
+      - POSTGRES_DB=${AIRFLOW_DB_NAME}
+    ports:
+      - 5432:5432
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+
   postgres:
     image: postgres:13
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    ports:
+      - 5433:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   webserver:
-    image: apache/airflow:2.9.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
-      - postgres
+      - airflow_db
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@airflow_db/${AIRFLOW_DB_NAME}
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
       - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
-      - AIRFLOW__CORE__LOAD_EXAMPLES=False 
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./data:/opt/airflow/data
     ports:
       - "8080:8080"
-    command: webserver
+    command: ["airflow", "webserver"]
 
   scheduler:
-    image: apache/airflow:2.9.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - webserver
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@airflow_db/${AIRFLOW_DB_NAME}
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-    command: scheduler
+      - ./data:/opt/airflow/data
+    command: ["airflow", "scheduler"]
 
   init:
-    image: apache/airflow:2.9.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
+      - airflow_db
       - postgres
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@airflow_db/${AIRFLOW_DB_NAME}
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - ./data:/opt/airflow/data
     entrypoint: >
       /bin/bash -c
       "airflow db init &&
-       airflow users create -u admin -p admin -f admin -l admin -r Admin -e admin@example.com"
+      airflow users create -u admin -p admin -f admin -l admin -r Admin -e admin@example.com &&
+      psql -U ${DB_USER} -d ${DB_NAME} -c 'CREATE ROLE postgres LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION;' &&
+      psql -U ${AIRFLOW_DB_USER} -d ${AIRFLOW_DB_NAME} -c 'CREATE ROLE airflow_admin LOGIN SUPERUSER CREATEDB CREATEROLE REPLICATION;'"
 
 volumes:
+  airflow_db_data:
   postgres_data:

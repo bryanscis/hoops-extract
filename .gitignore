@@ -1,7 +1,5 @@
-curry.html
-gsw.html
-curry2015.html
-brk_gsw_2013.html
 .env
-steph_curry_2024.csv
 proxies.py
+__pycache__/
+*.DS_Store
+logs/
