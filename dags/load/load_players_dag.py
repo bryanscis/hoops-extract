@@ -1,10 +1,11 @@
+import sys
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-from datetime import timedelta
-import sys
 from dags.utils import log_task_start, log_task_end
 from dags.load.scripts.load_players import load_players
+from data_config import cleaned_current_players_dataset
+from datetime import timedelta
 
 sys.path.append('/opt/airflow')
 
@@ -23,6 +24,7 @@ with DAG(
     default_args=default_args,
     description='Loads players into database.',
     catchup=False,
+    schedule=[cleaned_current_players_dataset]
 ) as dag:
     
     start_log = PythonOperator(
@@ -37,7 +39,7 @@ with DAG(
     end_log = PythonOperator(
         task_id='end_log',
         python_callable=log_task_end,
-        op_args=['extract_schedule_dag']
+        op_args=['extract_schedule_dag'],
     )
 
     start_log >> load_players_task >> end_log

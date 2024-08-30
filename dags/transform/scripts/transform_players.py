@@ -1,9 +1,10 @@
-import logging
 import csv
-import re
-import Levenshtein
-import json
 import heapq
+import json
+import Levenshtein
+import logging
+import re
+from data_config import all_current_players_file_path, cleaned_names_file_path, cleaned_current_players_file_path
 from scripts.validate import BaseValidate
 from utils import get_current_season
 
@@ -29,11 +30,8 @@ def find_closest_name(name_to_match):
 
 def transform_players(**kwargs):
     '''
-    Transforms current players to specific format.
+    Finds whether or not there have been new players added to current players file. Pushes respective key depending on result.
     '''
-    year = get_current_season()
-    current_players_file_path = f'./data/{year}/{year}_all_players.csv'
-    cleaned_names_file_path = f'./data/{year}/cleaned_{year}_matched_players.json'
     try:
         with open(cleaned_names_file_path, mode='r') as json_file:
             matched_players = json.load(json_file)
@@ -44,7 +42,7 @@ def transform_players(**kwargs):
 
     BaseValidate.load_players()
 
-    with open(current_players_file_path, mode='r') as f:
+    with open(all_current_players_file_path, mode='r') as f:
         reader = csv.reader(f, delimiter='\t')
         for row in reader:
             player_name = re.sub(r'\W+', '', "".join(row[0])).lower()
@@ -59,7 +57,7 @@ def transform_players(**kwargs):
                 
                 unmatched_players[player_name] = best_match
 
-    if unmatched_players:
+    if unmatched_players or not matched_players:
         matched_players.update(unmatched_players)
         with open(cleaned_names_file_path, mode='w') as json_file:
             json.dump(matched_players, json_file, indent=4)
@@ -71,11 +69,8 @@ def transform_players(**kwargs):
 
 def update_current_players_file():
     '''
-    Updates the original player file with cleaned player names after transformations.
+    Creates new cleaned players file at './data/{year}/cleaned_{year}_all_players.csv' for transformed players.
     '''
-    year = get_current_season()
-    current_players_file_path = f'./data/{year}/{year}_all_players.csv'
-    cleaned_names_file_path = f'./data/{year}/cleaned_{year}_matched_players.json'
     try:
         with open(cleaned_names_file_path, mode='r') as json_file:
             cleaned_players = json.load(json_file)
@@ -83,9 +78,9 @@ def update_current_players_file():
         logging.warning(f"{cleaned_names_file_path} not found. Exiting.")
         return
     BaseValidate.load_players()
-    updated_rows = []
-    with open(current_players_file_path, mode='r') as player_file:
+    with open(all_current_players_file_path, mode='r') as player_file, open(cleaned_current_players_file_path, mode='w') as cleaned_player_file:
         reader = csv.reader(player_file, delimiter='\t')
+        writer = csv.writer(cleaned_player_file, delimiter='\t')
         for row in reader:
             player_name = re.sub(r'\W+', '', "".join(row[0])).lower()
             if player_name in cleaned_players:
@@ -93,12 +88,9 @@ def update_current_players_file():
                 row[0] = updated_name
                 logging.info(f"Updated player name: {player_name} -> {updated_name}")
             else:
-                row[0] =  BaseValidate._normalized_players[player_name]
-            updated_rows.append(row)
-    with open(current_players_file_path, mode='w', newline='') as player_file:
-        writer = csv.writer(player_file, delimiter='\t')
-        writer.writerows(updated_rows)
-    logging.info(f"Player file updated successfully. Output written to {current_players_file_path}.")
+                row[0] = BaseValidate._normalized_players[player_name]
+            writer.writerow(row)
+    logging.info(f"Player file updated successfully. Output written to {cleaned_current_players_file_path}.")
 
 def check_player_changes(**kwargs):
     '''

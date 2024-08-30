@@ -1,11 +1,10 @@
 import sys
-from airflow import DAG
-from dags.utils import log_task_start, log_task_end
-from dataset import all_players_dataset, current_players_dataset
-from airflow.operators.python import PythonOperator, BranchPythonOperator
-from airflow.sensors.external_task import ExternalTaskSensor
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.dates import days_ago
+from airflow import DAG
+from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from dags.utils import log_task_start, log_task_end
+from dags.data_config import all_players_dataset, all_current_players_dataset, cleaned_current_players_dataset
 from datetime import timedelta
 from transform.scripts.transform_players import transform_players, update_current_players_file, check_player_changes, complete_verification
 
@@ -25,7 +24,7 @@ with DAG(
     'transform_players_dag',
     default_args=default_args,
     description='Transform NBA player data',
-    schedule=[current_players_dataset],
+    schedule=[all_current_players_dataset],
     catchup=False,
 ) as dag:
     
@@ -37,7 +36,7 @@ with DAG(
     transform_current_players_task = PythonOperator(
         task_id='transform_current_players',
         python_callable= transform_players,
-        inlets=[current_players_dataset, all_players_dataset],
+        inlets=[all_current_players_dataset, all_players_dataset],
         provide_context=True
     )
     check_player_changes_task = BranchPythonOperator(
@@ -58,7 +57,8 @@ with DAG(
         task_id='end_log',
         python_callable=log_task_end,
         op_args=['transform_players_dag'],
-        trigger_rule='none_failed_min_one_success'
+        trigger_rule='none_failed_min_one_success',
+        outlets=[cleaned_current_players_dataset]
     )
     start_log >> transform_current_players_task >> check_player_changes_task
 

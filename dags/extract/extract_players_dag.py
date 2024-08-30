@@ -1,12 +1,12 @@
+import sys
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-from datetime import timedelta
-import sys
-from extract.scripts.extract_players import extract_all_players
+from dags.data_config import all_players_dataset, all_current_players_dataset
 from dags.utils import log_task_start, log_task_end, get_current_season
+from datetime import timedelta
+from extract.scripts.extract_players import extract_all_players
 from scripts.nba_player_list import extract_current_players
-from dataset import all_players_dataset, current_players_dataset
 
 sys.path.append('/opt/airflow')
 
@@ -42,7 +42,7 @@ with DAG(
         task_id='extract_current_players',
         python_callable=extract_current_players,
         op_args=[str(get_current_season())],
-        outlets=[current_players_dataset]
+        outlets=[all_current_players_dataset]
     )
     end_log = PythonOperator(
         task_id='end_log',

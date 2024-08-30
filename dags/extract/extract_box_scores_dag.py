@@ -3,9 +3,9 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
+from dags.data_config import schedule_dataset, box_scores_dataset, statistics_dataset
 from dags.utils import log_task_start, log_task_end
 from extract.scripts.extract_box_scores import extract_box_scores
-from dataset import schedule_dataset, box_scores_dataset, statistics_dataset
 
 sys.path.append('/opt/airflow')
 

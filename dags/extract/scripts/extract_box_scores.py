@@ -1,11 +1,12 @@
 import csv
 import logging
 import pandas as pd
-from utils import get_current_season
-from pathlib import Path
 from datetime import datetime
+from data_config import schedule_file_path, statistics_file_path
+from pathlib import Path
 from scripts.game import Game
 from scripts.misc import get_team_abbreviation
+from utils import get_current_season
 
 
 def extract_box_scores():
@@ -13,17 +14,13 @@ def extract_box_scores():
     Extracts box scores of current season to './data/{year}/schedules/nba_{year}_schedule.csv'. 
     '''
     year = get_current_season()
-    schedule_file = f'/opt/airflow/data/{year}/schedules/nba_{year}_schedule.csv'
-    stats_file = f'/opt/airflow/data/{year}/nba_{year}_statistics.csv'
-    
-    if not Path(schedule_file).is_file():
-        raise FileNotFoundError(f"Schedule file {schedule_file} not found")
-    if not Path(stats_file).is_file():
-        with open(stats_file, 'w') as write:
+    if not Path(schedule_file_path).is_file():
+        raise FileNotFoundError(f"Schedule file {schedule_file_path} not found")
+    if not Path(statistics_file_path).is_file():
+        with open(statistics_file_path, 'w') as write:
             writer = csv.writer(write, delimiter='\t')
-    logging.info(f'Schedule file {schedule_file} found.')
-
-    with open(schedule_file, 'r') as f, open(stats_file, 'a', newline="") as write:
+    logging.info(f'Schedule file {schedule_file_path} found.')
+    with open(schedule_file_path, 'r') as f, open(statistics_file_path, 'a', newline="") as write:
         reader = csv.reader(f, delimiter='\t')
         writer = csv.writer(write, delimiter='\t')
         for row in reader:
@@ -43,3 +40,4 @@ def extract_box_scores():
                         logging.info(f'Finished writing {home_team} vs {away_team} on {game_date.date()} to statistics file.')
                 except Exception as e:
                     logging.info(f'Error occured while getting game on {game_date.date()} for {home_team} vs {away_team}: {e}')
+                    raise e

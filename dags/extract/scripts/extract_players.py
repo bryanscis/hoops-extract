@@ -1,12 +1,12 @@
 import json
 import requests
 import logging
+from bs4 import BeautifulSoup
 from string import ascii_lowercase
 from unidecode import unidecode
 from scripts.proxies import proxies
-from bs4 import BeautifulSoup
 
-def extract_players():
+def extract_all_players():
     '''
     Extracts all players name and their respective Basketball Reference URLs and outputs to location at './data/all_players.json'.
     '''
@@ -23,13 +23,16 @@ def extract_players():
                 for row in table.tbody.find_all('tr'):
                     if not row.get('class') == None: continue
                     name = row.find('th', {'data-stat': 'player'}).text.strip()
-                    player_url = f"https://www.basketball-reference.com{row.find('th', {'data-stat': 'player'}).a['href']}"
+                    player_code = row.find('th', {'data-stat': 'player'}).get('data-append-csv')
+                    player_url = f"https://www.basketball-reference.com/players/{alphabet}/{player_code}"
                     players_data.append({"Name": unidecode(name), "URL": player_url})
                 logging.info(f"Players with last name starting with '{alphabet.upper()}' added.")
-            except:
-                logging.info(f"Error parsing information from {url}. Exiting.")
+            except Exception as e:
+                logging.exception(f"Error parsing information from {url}. Exiting.")
+                raise e
         try:
             json.dump(players_data, writefile, indent=4)
             logging.info(f"Players and their respective URLs has been dumped to './data/all_players.json'.")
-        except:
-            logging.info(f"Error dumping file to './data/all_players.json'.")
+        except Exception as e:
+            logging.exception(f"Error dumping file to './data/all_players.json'.")
+            raise e

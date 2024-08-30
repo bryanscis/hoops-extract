@@ -1,12 +1,12 @@
+import sys
 from airflow import DAG
+from airflow.datasets import Dataset
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
-from airflow.datasets import Dataset
 from datetime import timedelta
-import sys
-from extract.scripts.extract_schedule import extract_schedule
+from dags.data_config import schedule_dataset
 from dags.utils import log_task_start, log_task_end
-from dataset import schedule_dataset
+from extract.scripts.extract_schedule import extract_schedule
 
 sys.path.append('/opt/airflow')
 
