@@ -20,6 +20,7 @@ def extract_box_scores():
         with open(statistics_file_path, 'w') as write:
             writer = csv.writer(write, delimiter='\t')
     logging.info(f'Schedule file {schedule_file_path} found.')
+    new_files = []
     with open(schedule_file_path, 'r') as f, open(statistics_file_path, 'a', newline="") as write:
         reader = csv.reader(f, delimiter='\t')
         writer = csv.writer(write, delimiter='\t')
@@ -31,6 +32,7 @@ def extract_box_scores():
                 try:
                     if not Path(game_file).is_file():
                         logging.info(f'Creating game file {home_team} vs {away_team} on {game_date.date()}')
+                        new_files.append(game_file)
                         current_game = Game(home_team, away_team, row[0], row[1], year)
                         total_box_df =  pd.concat([current_game.home_box(),current_game.away_box()], ignore_index=True)
                         total_box_df.to_csv(f'{game_file}', sep='\t', index=False, header=False)
@@ -41,3 +43,4 @@ def extract_box_scores():
                 except Exception as e:
                     logging.info(f'Error occured while getting game on {game_date.date()} for {home_team} vs {away_team}: {e}')
                     raise e
+    return {'new_games' :new_files}

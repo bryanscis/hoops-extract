@@ -1,6 +1,8 @@
 import sys
 from airflow import DAG
+from airflow.models.xcom_arg import XComArg
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
 from dags.data_config import schedule_dataset, box_scores_dataset, statistics_dataset
@@ -39,11 +41,15 @@ with DAG(
         inlets=[schedule_dataset],
         outlets=[box_scores_dataset, statistics_dataset]
     )
-    
     end_log = PythonOperator(
         task_id='end_log',
         python_callable=log_task_end,
         op_args=['extract_box_scores_dag']
     )
+    transform_box_scores_trigger_task = TriggerDagRunOperator(
+        task_id='transform_games_task',
+        trigger_dag_id='transform_box_scores_dag',
+        conf=XComArg(extract_box_scores_task)
+    )
 
-    start_log >> extract_box_scores_task >> end_log
+    start_log >> extract_box_scores_task >> end_log >> transform_box_scores_trigger_task 
