@@ -27,16 +27,20 @@ def load_box_scores(**kwargs):
             with open(file_name, 'r') as rf:
                 reader = csv.reader(rf, delimiter='\t')
                 for row in reader:
-                    first_name, last_name, suffix = split_name(row[0])
-                    cursor.execute(select_player_team, (first_name, last_name, suffix, [home_team_id, away_team_id]))
-                    current_player_id = cursor.fetchone()[0]
-                    cursor.execute(insert_player_stats, (game_id, current_player_id, row[1], int(float(row[2])), int(float(row[3])), int(float(row[5])), 
-                                                         int(float(row[6])), int(float(row[8])), int(float(row[9])), int(float(row[11])), int(float(row[12])), 
-                                                         int(float(row[13])), int(float(row[14])), int(float(row[15])), int(float(row[16])), int(float(row[17])), 
-                                                         int(float(row[18])), int(float(row[19])), int(float(row[21])), True if row[1] == '00:00:00' else False ))
+                    try:
+                        first_name, last_name, suffix = split_name(row[0])
+                        cursor.execute(select_player_team, (first_name, last_name, suffix, [home_team_id, away_team_id]))
+                        current_player_id = cursor.fetchone()[0]
+                        cursor.execute(insert_player_stats, (game_id, current_player_id, row[1], int(float(row[2])), int(float(row[3])), int(float(row[5])), 
+                                                            int(float(row[6])), int(float(row[8])), int(float(row[9])), int(float(row[11])), int(float(row[12])), 
+                                                            int(float(row[13])), int(float(row[14])), int(float(row[15])), int(float(row[16])), int(float(row[17])), 
+                                                            int(float(row[18])), int(float(row[19])), int(float(row[21])), True if row[1] == '00:00:00' else False ))
+                    except Exception as e:
+                        logging.error(f"Error processing {row} in {file_name}: {e}")
+                        raise e
         conn.commit()
     except Exception as e:
-        logging.info(f"Error {e} on file: {file_name}.")
+        logging.error(f"Error {e} on file: {file_name}.")
         conn.rollback()
         raise e
     finally:
