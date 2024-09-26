@@ -14,6 +14,7 @@ insert_player_query = ("""
                 pre_draft_team = EXCLUDED.pre_draft_team
     RETURNING player_id;
 """)
+
 insert_player_team_season_query = ("""
     INSERT INTO player_team_season (player_id, team_id, age, season_id, current_team)
     VALUES (%s, %s, %s, %s, %s)
@@ -26,4 +27,8 @@ insert_player_team_season_query = ("""
 insert_player_stats = ("""
     INSERT INTO player_stats (game_id, player_id, minutes_played, fg_made, fg_attempted, threes_made, threes_attempted, ft_made, ft_attempted, orb, drb, rebounds, assists, steals, blocks, turnovers, fouls, points, plus_minus, inactive)
                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+""")
+
+update_game = ("""
+    UPDATE game SET home_team_score = %s, away_team_score = %s, attendance = %s, duration = %s, stage = %s WHERE game_id = %s;
 """)

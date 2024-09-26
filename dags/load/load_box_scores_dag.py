@@ -4,6 +4,7 @@ from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from dags.utils import log_task_start, log_task_end
 from dags.load.scripts.load_box_scores import load_box_scores
+from dags.load.scripts.load_statistics import load_statistics
 from datetime import timedelta
 
 sys.path.append('/opt/airflow')
@@ -30,6 +31,10 @@ with DAG(
         python_callable=log_task_start,
         op_args=['load_box_scores_dag']
     )
+    load_statistics_task = PythonOperator(
+        task_id= 'load_statistics',
+        python_callable=load_statistics,
+    )
     load_box_scores_task = PythonOperator(
         task_id= 'load_box_scores',
         python_callable=load_box_scores,
@@ -40,4 +45,4 @@ with DAG(
         op_args=['load_box_scores_dag'],
     )
 
-    start_log >> load_box_scores_task >> end_log
+    start_log >> load_statistics_task  >>load_box_scores_task >> end_log

@@ -21,6 +21,9 @@ def transform_statistics():
     df['home_team_score'] = pd.to_numeric(df['home_team_score'], errors='coerce').astype(int)
     df['away_team_score'] = pd.to_numeric(df['away_team_score'], errors='coerce').astype(int) 
 
+    df['duration'].fillna('0:00', inplace=True)
+    df['stage'].fillna('unknown', inplace=True)
+
     if df.isnull().values.any():
         invalid_rows = df[df.isnull().any(axis=1)]
         for index, row in invalid_rows.iterrows():
