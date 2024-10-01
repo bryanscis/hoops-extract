@@ -1,7 +1,7 @@
 import sys
 from airflow import DAG
-from airflow.datasets import Dataset
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.dates import days_ago
 from datetime import timedelta
 from dags.data_config import schedule_dataset
@@ -23,8 +23,8 @@ default_args = {
 with DAG(
     'extract_schedule_dag',
     default_args=default_args,
-    description='Extract NBA schedule annually',
-    schedule_interval='@yearly',
+    description='Extract NBA schedule',
+    schedule_interval='@daily',
     catchup=False,
 ) as dag:
     
@@ -43,5 +43,9 @@ with DAG(
         python_callable=log_task_end,
         op_args=['extract_schedule_dag']
     )
+    transform_schedule_trigger_task =  TriggerDagRunOperator(
+        task_id='transform_schedule_task',
+        trigger_dag_id='transform_schedule_dag',
+    )
 
-    start_log >> extract_schedule_task >> end_log
+    start_log >> extract_schedule_task >> end_log >> transform_schedule_trigger_task 
