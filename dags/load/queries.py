@@ -1,8 +1,13 @@
 select_season_query = ("SELECT season_id FROM season WHERE season_year = %s")
 select_player_id = ("SELECT player_id FROM player WHERE first_name = %s AND last_name = %s;")
 select_team_id = ("SELECT team_id FROM team WHERE abbreviation = %s")
+select_team_name_id = ("SELECT team_id FROM team WHERE team_name = %s;")
 select_game_id = ("SELECT game_id FROM game WHERE home_team_id = %s AND away_team_id = %s AND game_date = %s AND season_year = %s")
 select_player_team = ("SELECT p.player_id FROM player p JOIN player_team_season pts ON p.player_id = pts.player_id WHERE p.first_name = %s AND p.last_name = %s AND (p.suffix = %s OR p.suffix IS NULL)AND pts.team_id = ANY(%s)")
+
+insert_games_query = (""" 
+    INSERT INTO game(home_team_id, away_team_id, game_date, start_time, season_year) VALUES (%s, %s, %s, %s, %s) ON CONFLICT DO NOTHING;
+""")
 
 insert_player_query = ("""
     INSERT INTO player (first_name, last_name, suffix, position, height, weight, pre_draft_team, draft_pick, nationality)
