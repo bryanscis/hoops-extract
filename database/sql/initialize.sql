@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS player(
     pre_draft_team VARCHAR(75),
     draft_pick VARCHAR(75),
     nationality VARCHAR(75),
-    UNIQUE(first_name, last_name, draft_pick, nationality)
+    UNIQUE(first_name, last_name, suffix, draft_pick, nationality)
 );
 
 -- Table: player_team_season
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS player_team_season(
     age INT,
     season_id INT REFERENCES season(season_id) ON DELETE CASCADE,
     current_team BOOLEAN NOT NULL DEFAULT TRUE,
-    UNIQUE (player_id, season_id, team_id, current_team)
+    UNIQUE (player_id, season_id, team_id)
 );
 
 -- Table: game
@@ -47,13 +47,13 @@ CREATE TABLE IF NOT EXISTS game (
     away_team_id INT REFERENCES team(team_id) ON DELETE CASCADE,
     game_date DATE,
     start_time VARCHAR(10),
-    season_year INT REFERENCES season(season_year) ON DELETE CASCADE,
-    home_team_score INT,
-    away_team_score INT,
-    attendance INT,
-    duration INTERVAL,
-    stage VARCHAR(20),
-    UNIQUE(game_id, home_team_id, away_team_id, game_date, start_time, season_year)
+    season_id INT REFERENCES season(season_id) ON DELETE CASCADE,
+    home_team_score INT DEFAULT NULL,
+    away_team_score INT DEFAULT NULL,
+    attendance INT DEFAULT NULL,
+    duration INTERVAL DEFAULT NULL,
+    stage VARCHAR(20) DEFAULT NULL,
+    UNIQUE(home_team_id, away_team_id, game_date, start_time, season_id)
 );
 
 -- Table: player_stats
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS player_stats (
     game_id INT REFERENCES game(game_id) ON DELETE CASCADE,
     player_id INT REFERENCES player(player_id) ON DELETE CASCADE,
     game_started BOOLEAN,
-    minutes_played VARCHAR(15),
+    minutes_played INTERVAL,
     fg_made INT CHECK (fg_made >= 0),                   
     fg_attempted INT CHECK (fg_attempted >= 0),          
     threes_made INT CHECK (threes_made >= 0),           
@@ -116,4 +116,4 @@ INSERT INTO team (team_name, abbreviation) VALUES
     ('Washington Wizards', 'WAS');
 
 INSERT INTO season (season_year)
-SELECT generate_series(1946, 2024) AS season_year;
+SELECT generate_series(1946, 2050) AS season_year;

@@ -3,7 +3,7 @@ import logging
 from airflow.hooks.postgres_hook import PostgresHook
 from data_config import cleaned_schedule_file_path
 from dags.utils import get_current_season
-from dags.load.queries import select_team_name_id, select_all_games_query, insert_new_game_query, update_game_query
+from dags.load.queries import select_season_query, select_team_name_id, select_all_games_query, insert_new_game_query, update_game_query
 from datetime import datetime
 
 def load_new_schedule():
@@ -27,8 +27,10 @@ def load_schedule():
     conn = hook.get_conn()
     cursor = conn.cursor()
     try:
+        cursor.execute(select_season_query, (current_season,))
+        season_id = cursor.fetchone()[0]
         new_schedule = load_new_schedule()
-        cursor.execute(select_all_games_query, (current_season,))
+        cursor.execute(select_all_games_query, (season_id,))
         db_games = cursor.fetchall()
         db_schedule = {(game[4], game[1], game[2], game[3]): game[0] for game in db_games}
 
@@ -54,7 +56,7 @@ def load_schedule():
             # Game is new and needs to be inserted
             else:
                 logging.info(f"New game to be added for {home_team, away_team} on {game_date, start_time}")
-                cursor.execute(insert_new_game_query, (home_team_id, away_team_id, game_date, start_time, current_season))
+                cursor.execute(insert_new_game_query, (home_team_id, away_team_id, game_date, start_time, season_id))
         conn.commit()
     except Exception as e:
         conn.rollback()

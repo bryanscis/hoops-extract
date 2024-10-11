@@ -1,7 +1,7 @@
 import csv
 import logging
 from airflow.hooks.postgres_hook import PostgresHook
-from dags.load.queries import select_game_id, select_team_id, select_player_team, insert_player_stats
+from dags.load.queries import select_season_query ,select_game_id, select_team_id, select_player_team, insert_player_stats
 from pathlib import Path
 from scripts.misc import split_name
 from utils import get_current_season
@@ -15,6 +15,8 @@ def load_box_scores(**kwargs):
     conn = hook.get_conn()
     cursor = conn.cursor()
     try:
+        cursor.execute(select_season_query, (get_current_season(),))
+        season_id = cursor.fetchone()[0]
         for file_name in file_paths:
             file = Path(file_name).stem
             date, home_team, away_team = str(file[:8]), str(file[8:11]), str(file[11:])
@@ -22,7 +24,7 @@ def load_box_scores(**kwargs):
             home_team_id = cursor.fetchone()[0]
             cursor.execute(select_team_id, (away_team,))
             away_team_id = cursor.fetchone()[0]
-            cursor.execute(select_game_id, (home_team_id, away_team_id, date, get_current_season()))
+            cursor.execute(select_game_id, (home_team_id, away_team_id, date, season_id))
             game_id = cursor.fetchone()[0]
             with open(file_name, 'r') as rf:
                 reader = csv.reader(rf, delimiter='\t')

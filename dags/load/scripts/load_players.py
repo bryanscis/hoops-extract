@@ -4,6 +4,7 @@ from airflow.hooks.postgres_hook import PostgresHook
 from dags.load.queries import select_season_query, select_player_id, select_team_id, insert_player_query, insert_player_team_season_query
 from scripts.misc import split_name, team_realgm
 from data_config import cleaned_current_players_file_path
+from dags.utils import get_current_season
 
 def load_players():
     '''
@@ -13,14 +14,14 @@ def load_players():
     conn = hook.get_conn()
     cursor = conn.cursor()
     try:
+        cursor.execute(select_season_query, (get_current_season(),))
+        season_id = cursor.fetchone()[0]
         with open(cleaned_current_players_file_path, "r") as f:
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 first_name, last_name, suffix = split_name(row[0])
                 cursor.execute(select_player_id, (first_name, last_name))
                 player_id = cursor.fetchone()
-                cursor.execute(select_season_query, (2024,))
-                season_id = cursor.fetchone()[0]
                 if not player_id:
                     cursor.execute(insert_player_query, (first_name, last_name, suffix, row[1], row[2], row[3], row[8], row[9], row[10]))
                     player_id = cursor.fetchone()[0]

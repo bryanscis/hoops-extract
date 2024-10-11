@@ -2,18 +2,18 @@ select_season_query = ("SELECT season_id FROM season WHERE season_year = %s")
 select_player_id = ("SELECT player_id FROM player WHERE first_name = %s AND last_name = %s;")
 select_team_id = ("SELECT team_id FROM team WHERE abbreviation = %s")
 select_team_name_id = ("SELECT team_id FROM team WHERE team_name = %s;")
-select_game_id = ("SELECT game_id FROM game WHERE home_team_id = %s AND away_team_id = %s AND game_date = %s AND season_year = %s")
+select_game_id = ("SELECT game_id FROM game WHERE home_team_id = %s AND away_team_id = %s AND game_date = %s AND season_id = %s")
 select_player_team = ("SELECT p.player_id FROM player p JOIN player_team_season pts ON p.player_id = pts.player_id WHERE p.first_name = %s AND p.last_name = %s AND (p.suffix = %s OR p.suffix IS NULL)AND pts.team_id = ANY(%s)")
 select_all_games_query = ("""
-    SELECT g.game_id, g.start_time, t1.team_name as home_team, t2.team_name as away_team, g.game_date
+    SELECT g.game_id, g.start_time, t1.team_name AS home_team, t2.team_name AS away_team, g.game_date
     FROM game g
     JOIN team t1 ON g.home_team_id = t1.team_id
     JOIN team t2 ON g.away_team_id = t2.team_id
-    WHERE g.season_year = %s;
+    WHERE g.season_id = %s;
 """)
 
 insert_new_game_query = ("""
-    INSERT INTO game(home_team_id, away_team_id, game_date, start_time, season_year) VALUES (%s, %s, %s, %s, %s);
+    INSERT INTO game(home_team_id, away_team_id, game_date, start_time, season_id) VALUES (%s, %s, %s, %s, %s);
 """)
 
 insert_player_query = ("""
@@ -44,3 +44,7 @@ insert_player_stats = ("""
 update_game_query = """
     UPDATE game SET game_date = %s, start_time = %s WHERE game_id = %s;
 """
+
+update_statistics_query = ("""
+    UPDATE game SET home_team_score = %s, away_team_score = %s, attendance = %s, duration = %s, stage = %s WHERE game_id = %s;
+""")
